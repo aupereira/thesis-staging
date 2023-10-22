@@ -6,8 +6,6 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <inttypes.h>
-
 union buf
 {
     uint8_t bytes[64];
@@ -23,6 +21,7 @@ struct bufNode
 
 enum bufferStatus {Continue, AddPadBlock, Done};
 
+bool littleEndian;
 struct bufNode *head, *current;
 uint64_t totalNodes, bufferIndex, totalBits;
 
@@ -50,7 +49,7 @@ bool isLittleEndian()
 {
     uint32_t n = 0x00000001;
     uint8_t *p = (uint8_t *)&n;
-    return *p == 0x01;
+    return (*p == 0x01);
 }
 
 uint32_t chgEndUInt32(uint32_t n)
@@ -195,7 +194,14 @@ void buffGen(char filePath[])
                 current->buffer[bufferIndex]->bytes[byteIndex] = 0x00;
                 byteIndex += 1;
             }
-            current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+            if (littleEndian)
+            {
+                current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+            }
+            else
+            {
+                current->buffer[bufferIndex]->qwords[7] = totalBits;
+            }
             byteIndex += 8;
             bs = Done;
         }
@@ -232,7 +238,14 @@ void buffGen(char filePath[])
         {
             current->buffer[bufferIndex]->qwords[i] = 0x0000000000000000;
         }
-        current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+        if (littleEndian)
+        {
+            current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+        }
+        else
+        {
+            current->buffer[bufferIndex]->qwords[7] = totalBits;
+        }
     }
 
     fclose(fp);
@@ -320,7 +333,14 @@ void sha256()
         {
             for (int i = 0; i < 16; i++)
             {
-                W[i] = chgEndUInt32(current->buffer[bu]->dwords[i]);
+                if (littleEndian)
+                {
+                    W[i] = chgEndUInt32(current->buffer[bu]->dwords[i]);
+                }
+                else
+                {
+                    W[i] = current->buffer[bu]->dwords[i];
+                }
             }
 
             for (int i = 16; i < 64; i++)
@@ -375,14 +395,16 @@ void sha256()
     return;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    // Add command line args for file path.
-    char path[] = "C:/Users/Aurora/Desktop/thesis/data/sha.txt";
+    if (argc != 2){
+        printf("Invalid number of arguments.\nPlease enter a file path.\n");
+        exit(0);
+    }
 
-    bool littleEndian = isLittleEndian();
+    littleEndian = isLittleEndian();
 
-    buffGen(path);
+    buffGen(argv[1]);
 
     sha256();
 
