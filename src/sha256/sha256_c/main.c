@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <math.h>
 
+#define NODE_SIZE 4096
+
 union buf
 {
     uint8_t bytes[64];
@@ -15,7 +17,7 @@ union buf
 
 struct bufNode
 {
-    union buf *buffer[64];
+    union buf *buffer[NODE_SIZE];
     struct bufNode *next;
 };
 
@@ -226,7 +228,7 @@ void buffGen(char filePath[])
             bufferIndex += 1;
         }
         
-        if (bufferIndex == 64)
+        if (bufferIndex == NODE_SIZE)
         {
             addBuffers();
         }
@@ -260,7 +262,7 @@ void printBytes()
     {
         if(i < totalNodes - 1)
         {
-            for (int j = 0; j < 64; j++)
+            for (int j = 0; j < NODE_SIZE; j++)
             {
                 for (int k = 0; k < 64; k++)
                 {
@@ -290,7 +292,7 @@ void freeBuffers()
     for (int i = 0; i < totalNodes; i++)
     {
         if (i < totalNodes - 1){        
-            for(int j = 0; j < 64; j++)
+            for(int j = 0; j < NODE_SIZE; j++)
             {
                 free(current->buffer[j]);
             }
@@ -317,7 +319,7 @@ void sha256()
     uint32_t a, b, c, d, e, f, g, h, T1, T2;
     uint32_t W[64];
 
-    int si = 64;
+    int si = NODE_SIZE;
 
     current = head;
     struct bufNode *temp;
