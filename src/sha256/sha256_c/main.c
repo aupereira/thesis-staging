@@ -1,10 +1,15 @@
+// To-Do List:
+// Switch-case statemtents instead of if-else to make it more readable.
+// Compact the bulky function code.
+// Revamp memory management because it's a mess.
+// Maybe some level of parallelism, though how much has yet to be decided.
+
 // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <math.h>
 
 #define NODE_SIZE 4096
 
@@ -196,13 +201,14 @@ void buffGen(char filePath[])
                 current->buffer[bufferIndex]->bytes[byteIndex] = 0x00;
                 byteIndex += 1;
             }
-            if (littleEndian)
+            switch (littleEndian)
             {
-                current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
-            }
-            else
-            {
-                current->buffer[bufferIndex]->qwords[7] = totalBits;
+                case true:
+                    current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+                    break;
+                default: 
+                    current->buffer[bufferIndex]->qwords[7] = totalBits;
+                    break;
             }
             byteIndex += 8;
             bs = Done;
@@ -240,13 +246,14 @@ void buffGen(char filePath[])
         {
             current->buffer[bufferIndex]->qwords[i] = 0x0000000000000000;
         }
-        if (littleEndian)
+        switch (littleEndian)
         {
-            current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
-        }
-        else
-        {
-            current->buffer[bufferIndex]->qwords[7] = totalBits;
+            case true:
+                current->buffer[bufferIndex]->qwords[7] = chgEndUInt64(totalBits);
+                break;
+            default: 
+                current->buffer[bufferIndex]->qwords[7] = totalBits;
+                break;
         }
     }
 
@@ -335,13 +342,14 @@ void sha256()
         {
             for (int i = 0; i < 16; i++)
             {
-                if (littleEndian)
+                switch (littleEndian)
                 {
-                    W[i] = chgEndUInt32(current->buffer[bu]->dwords[i]);
-                }
-                else
-                {
-                    W[i] = current->buffer[bu]->dwords[i];
+                    case true:
+                        W[i] = chgEndUInt32(current->buffer[bu]->dwords[i]);
+                        break;
+                    default:
+                        W[i] = current->buffer[bu]->dwords[i];
+                        break;
                 }
             }
 
