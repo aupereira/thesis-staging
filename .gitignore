@@ -1,4 +1,4 @@
-# Currently supports C, C++, Rust, and Python files
+# Currently supports C, C#, C++, Java, Rust, and Python files (mostly)
 *.s
 
 .vscode/
@@ -99,3 +99,11 @@ dkms.conf
 **/ENV/
 **/env.bak/
 **/venv.bak/
+
+# C#
+**/*_cs/bin
+**/*_cs/obj
+*.sln
+
+# Java
+*.class
