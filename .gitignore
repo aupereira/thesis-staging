@@ -1,6 +1,8 @@
 # Currently supports C, C++, Rust, and Python files
 *.s
 
+.vscode/
+
 # Sources: 
 # https://github.com/github/gitignore/blob/main/C.gitignore
 # https://github.com/github/gitignore/blob/main/C%2B%2B.gitignore
