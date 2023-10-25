@@ -2,6 +2,7 @@
 *.s
 
 .vscode/
+.vscode/settings.json
 
 # Sources: 
 # https://github.com/github/gitignore/blob/main/C.gitignore
