@@ -1,6 +1,7 @@
 # Currently supports C, C#, C++, Java, Rust, and Python files (mostly)
 *.s
 
+.vs/
 .vscode/
 .vscode/settings.json
 
