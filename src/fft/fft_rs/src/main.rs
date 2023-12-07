@@ -75,6 +75,9 @@ fn main() {
         handle.join().unwrap();
     }
 
+
+    //Basic validation set for earlier development
+    
     // let fft_size: u64 = 65536;
     // let num_loops: u64 = 10;
     // let num_threads: u64 = 12;
@@ -90,6 +93,7 @@ fn main() {
 
     // println!("{:?}", x);
 }
+
 
 
 // Might want to test this for speed.
@@ -150,64 +154,4 @@ fn main() {
 //         re: rng.gen_range(-1.0..1.0),
 //         im: rng.gen_range(-1.0..1.0),
 //     }
-// }
-
-
-
-// fn fft_failed_attempt_1(x: &mut [Complex<f64>]) {
-//     let n: usize = x.len();
-
-//     let half_n: usize = n / 2;
-    
-//     if n <= 1 {
-//         return;
-//     }
-
-//     let mut even: Vec<Complex<f64>> = Vec::new();
-//     let mut odd: Vec<Complex<f64>> = Vec::new();
-
-//     for i in 0..half_n {
-//         even.push(x[2*i]);
-//         odd.push(x[2*i + 1]);
-//     }
-
-//     //let (even, odd) = x.split_at_mut(half_n);
-    
-//     fft(&mut even);
-//     fft(&mut odd);
-
-//     for k in 0..half_n {
-//         let t = Complex::exp(Complex::new(-2.0 * PI * k as f64 / n as f64, 0.0)) * odd[k];
-//         x[k] = even[k] + t;
-//         x[k + half_n] = odd[k] - t;
-//     }
-
-//     return;
-// }
-
-// fn fft_failed_attempt_2(x: &[Complex<f64>]) -> Vec<Complex<f64>> {
-//     let n: usize = x.len();
-
-//     let half_n: usize = n / 2;
-    
-//     if n <= 1 {
-//         return x.to_vec();
-//     }
-
-//     let mut even: Vec<_> = x.iter().enumerate().filter_map(|(i, v)| if i % 2 == 0 { Some(*v) } else { None }).collect();
-//     let mut odd: Vec<_> = x.iter().enumerate().filter_map(|(i, v)| if i % 2 != 0 { Some(*v) } else { None }).collect();
-//     even = fft(&even);
-//     odd = fft(&odd);
-
-//     let mut out: Vec<Complex<f64>> = vec![Complex::new(0.0, 0.0); n];
-
-//     let mut t: Complex<f64>;
-
-//     for k in 0..half_n {
-//         t = Complex::exp(-2.0 * PI * k as f64 / n as f64 * Complex::i()) * odd[k];
-//         out[k] = even[k] + t;
-//         out[k + half_n] = odd[k] - t;
-//     }
-
-//     return out;
 // }

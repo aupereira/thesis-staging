@@ -23,3 +23,13 @@ This repo contains work in progress versions of the benchmarks used for my thesi
   * Indexing by column
 5. #### Neural Net
   * Currently planned to be an MLP
+
+
+### Basic Usage
+1. #### SHA256
+  * ./sha256 `<"FILEPATH">`
+2. #### FFT
+  * ./fft `<FFT_SIZE>` `<LOOP_ITERATIONS>` `<THREADS>`
+  * FFT_SIZE - Represents a power of 2. I.e., 16 represents an FFT of size 65,536
+  * LOOP_ITERATIONS - The number of FFTs to process.
+  * THREADS - Number of worker threads to spawn.
