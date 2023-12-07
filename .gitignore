@@ -108,3 +108,6 @@ dkms.conf
 
 # Java
 *.class
+
+# Test files
+*.OLD
