@@ -1,3 +1,5 @@
+package eigenvalue_java;
+
 class Main {
     static void printMat(double[][] A) {
         System.out.println();
@@ -60,17 +62,20 @@ class Main {
         return A;
     }
     
-    static void vSub(double[] v1, double[] v2) {
+    static double[] vAdd(double[] v1, double[] v2) {
+        double[] w = new double[v1.length];
         for (int i = 0; i < v1.length; i++) {
-            v1[i] -= v2[i];
+            w[i] = v1[i] + v2[i];
         }
+        return w;
     }
 
     static double[] vMulS(double[] v, double s) {
+        double[] w = new double[v.length];
         for (int i = 0; i < v.length; i++) {
-            v[i] *= s;
+            w[i] = v[i] * s;
         }
-        return v;
+        return w;
     }
 
     static void vDivS(double[] v, double s) {
@@ -108,7 +113,7 @@ class Main {
         double temp;
 
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
+            for (int j = i; j < m; j++) {
                 temp = A[i][j];
                 A[i][j] = A[j][i];
                 A[j][i] = temp;
@@ -130,7 +135,7 @@ class Main {
         for (int i = 0; i < I; i++) {
             for (int j = 0; j < J; j++) {
                 for (int k = 0; k < K; k++) {
-                    C[i][k] += A[i][k] * B[j][k];
+                    C[i][j] += A[i][k] * B[j][k];
                 }
             }
         }
@@ -145,16 +150,22 @@ class Main {
         double[][] Q = new double[n][m];
         double[][] R = A;
 
-        for (int i = 0; i < m - 1; i++) {
+        for (int k = 0; k < m - 1; k++) {
             double[] v = new double[n];
-            for (int j = v.length - i - 1; j >= 0; j--) {
-                v[j] = A[i + j][i];
+            for (int j = n - k - 1; j >= 0; j--) {
+                v[k + j] = R[k + j][k];
             }
-            vSub(v, vMulS(stdBasis(n, i), DNRM2(v)));
+
+            // double a = DNRM2(v) * -sgn(v[k]);
+            // double[] b = stdBasis(n, k);
+            // double[] c = vMulS(b, a);
+            // double[] d = vAdd(v, c);
+
+            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * -sgn(v[k + 1])));
             vDivS(v, DNRM2(v));
             double[][] H = mAdd(identity(n), mul2OuterProd(v));
             R = GEMM(H, R);
-            if (i == 0) {
+            if (k == 0) {
                 Q = H;
             } else {
                 Q = GEMM(Q, H);
@@ -165,7 +176,9 @@ class Main {
     }
 
     public static void main(String[] args) {
-        double[][] test = rndHermitian(5);
+        //double[][] test = rndHermitian(10);
+        //double[][] test = {{-1.0, -1.0, 1.0}, {1.0, 3.0, 3.0}, {-1.0, -1.0, 5.0}};
+        double[][] test = {{4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -2.0}, {2.0, 1.0, -2.0, -1.0}};
         printMat(test);
         double[][] res = householder(test);
         printMat(res);
