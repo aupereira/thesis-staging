@@ -96,6 +96,19 @@ class Main {
 
         return A;
     }
+
+    static double[][] mSub(double[][] A, double[][] B) {
+        int I = A.length;
+        int J = A[0].length;
+        
+        for (int i = 0; i < I; i++) {
+            for (int j = 0; j < J; j++) {
+                A[i][j] -= B[i][j];
+            }
+        }
+
+        return A;
+    }
     
     static double sgn(double x) {
         if (x >= 0.0) {
@@ -106,25 +119,42 @@ class Main {
         }
     }
 
-    static void transpose(double[][] A) {
+    static double[][] transpose(double[][] A) {
         int n = A.length;
         int m = A[0].length;
-        
-        double temp;
+
+        double[][] B = new double[m][n];
 
         for (int i = 0; i < n; i++) {
-            for (int j = i; j < m; j++) {
-                temp = A[i][j];
-                A[i][j] = A[j][i];
-                A[j][i] = temp;
+            for (int j = 0; j < m; j++) {
+                B[j][i] = A[i][j];
             }
         }
 
-        return;
+        return B;
     }
 
+    // Use this if transposing in place works.
+
+    // static void transpose(double[][] A) {
+    //     int n = A.length;
+    //     int m = A[0].length;
+        
+    //     double temp;
+
+    //     for (int i = 0; i < n; i++) {
+    //         for (int j = i; j < m; j++) {
+    //             temp = A[i][j];
+    //             A[i][j] = A[j][i];
+    //             A[j][i] = temp;
+    //         }
+    //     }
+
+    //     return;
+    // }
+
     static double[][] GEMM(double[][] A, double[][] B) {
-        transpose(B);
+        double t_B[][] = transpose(B);
         
         int I = A.length;
         int J = B.length;
@@ -135,7 +165,7 @@ class Main {
         for (int i = 0; i < I; i++) {
             for (int j = 0; j < J; j++) {
                 for (int k = 0; k < K; k++) {
-                    C[i][j] += A[i][k] * B[j][k];
+                    C[i][j] += A[i][k] * t_B[j][k];
                 }
             }
         }
@@ -152,16 +182,11 @@ class Main {
 
         for (int k = 0; k < m - 1; k++) {
             double[] v = new double[n];
-            for (int j = n - k - 1; j >= 0; j--) {
-                v[k + j] = R[k + j][k];
+            for (int j = k; j < n; j++) {
+                v[j] = R[j][k];
             }
 
-            // double a = DNRM2(v) * -sgn(v[k]);
-            // double[] b = stdBasis(n, k);
-            // double[] c = vMulS(b, a);
-            // double[] d = vAdd(v, c);
-
-            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * -sgn(v[k + 1])));
+            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * sgn(v[k + 1])));
             vDivS(v, DNRM2(v));
             double[][] H = mAdd(identity(n), mul2OuterProd(v));
             R = GEMM(H, R);
@@ -172,12 +197,39 @@ class Main {
             }
         }
         
+        // printMat(GEMM(Q, R));
+
         return R;
     }
 
+    static double[][] tridiagonalize(double[][] A) {
+        int n = A.length;
+        int m = A[0].length;
+
+        for (int k = 0; k < m - 2; k++) {
+            double[] v = new double[n];
+            for (int j = k + 1; j < n; j++) {
+                v[j] = A[j][k];
+            }
+            
+            double alpha = -sgn(v[k + 1]) * DNRM2(v);
+            double r = Math.sqrt(0.5 * ((alpha * alpha) - (v[k + 1] * alpha)));
+
+            v[k + 1] = (v[k + 1] - alpha) / (2.0 * r);
+            for (int j = k + 2; j < n; j++) {
+                v[j] = v[j] / (2.0 * r); 
+            }
+
+            double[][] P = mAdd(identity(n), mul2OuterProd(v));
+            A = GEMM(GEMM(P, A), P);
+        }
+
+        return A;
+    }
+
     public static void main(String[] args) {
-        //double[][] test = rndHermitian(10);
-        //double[][] test = {{-1.0, -1.0, 1.0}, {1.0, 3.0, 3.0}, {-1.0, -1.0, 5.0}};
+        // double[][] test = rndHermitian(7);
+        // double[][] test = {{-1.0, -1.0, 1.0}, {1.0, 3.0, 3.0}, {-1.0, -1.0, 5.0}};
         double[][] test = {{4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -2.0}, {2.0, 1.0, -2.0, -1.0}};
         printMat(test);
         double[][] res = householder(test);
