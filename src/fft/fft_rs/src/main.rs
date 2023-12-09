@@ -1,14 +1,14 @@
-use num::complex::Complex;
 use std::f64::consts::PI;
-use rand::Rng;
 use std::thread;
 use std::env;
+use num::complex::Complex;
+use rand::Rng;
 
 fn rng_complex() -> Complex<f64> {
     let mut rng = rand::thread_rng();
     let complex = num::complex::Complex::new(
         rng.gen_range(-1.0..1.0),
-        rng.gen_range(-1.0..1.0)
+        0.0
     );
     return complex;
 }
@@ -96,7 +96,7 @@ fn main() {
 
 
 
-// Might want to test this for speed.
+// Primitive complex implementation for testing against builtins
 
 // use num_cpus;
 // use std::ops::{Add, Sub, Mul};
@@ -152,6 +152,6 @@ fn main() {
 //     let mut rng = rand::thread_rng();
 //     Complex {
 //         re: rng.gen_range(-1.0..1.0),
-//         im: rng.gen_range(-1.0..1.0),
+//         im: 0.0,
 //     }
 // }

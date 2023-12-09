@@ -1,9 +1,3 @@
-// To-Do List:
-// Switch-case statemtents instead of if-else to make it more readable.
-// Compact the bulky function code.
-// Revamp memory management because it's a mess.
-// Maybe some level of parallelism, though how much has yet to be decided.
-
 // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 
 #include <stdio.h>
