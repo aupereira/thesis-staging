@@ -13,7 +13,7 @@ class Main {
         System.out.println();
     }
     
-    static double[][] rndHermitian(int n) {
+    static double[][] rndSymmetric(int n) {
         double[][] A = new double[n][n];
 
         for (int i = 0; i < n; i++) {
@@ -134,24 +134,22 @@ class Main {
         return B;
     }
 
-    // Use this if transposing in place works.
-
-    // static void transpose(double[][] A) {
-    //     int n = A.length;
-    //     int m = A[0].length;
+    static void transposeIP(double[][] A) {
+        int n = A.length;
+        int m = A[0].length;
         
-    //     double temp;
+        double temp;
 
-    //     for (int i = 0; i < n; i++) {
-    //         for (int j = i; j < m; j++) {
-    //             temp = A[i][j];
-    //             A[i][j] = A[j][i];
-    //             A[j][i] = temp;
-    //         }
-    //     }
+        for (int i = 0; i < n; i++) {
+            for (int j = i; j < m; j++) {
+                temp = A[i][j];
+                A[i][j] = A[j][i];
+                A[j][i] = temp;
+            }
+        }
 
-    //     return;
-    // }
+        return;
+    }
 
     static double[][] GEMM(double[][] A, double[][] B) {
         double t_B[][] = transpose(B);
@@ -173,22 +171,23 @@ class Main {
         return C;
     }
 
-    static double[][] householder(double[][] A) {
-        int n = A.length;
-        int m = A[0].length;
+    static double[][] householder(double[][] R) {
+        int n = R.length;
+        int m = R[0].length;
 
-        double[][] Q = new double[n][m];
-        double[][] R = A;
+        double[][] Q = new double[n][n];
+        double[][] H;
+        double[] v;
 
         for (int k = 0; k < m - 1; k++) {
-            double[] v = new double[n];
+            v = new double[n];
             for (int j = k; j < n; j++) {
                 v[j] = R[j][k];
             }
 
             v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * sgn(v[k + 1])));
             vDivS(v, DNRM2(v));
-            double[][] H = mAdd(identity(n), mul2OuterProd(v));
+            H = mAdd(identity(n), mul2OuterProd(v));
             R = GEMM(H, R);
             if (k == 0) {
                 Q = H;
@@ -197,8 +196,6 @@ class Main {
             }
         }
         
-        // printMat(GEMM(Q, R));
-
         return R;
     }
 
@@ -206,21 +203,27 @@ class Main {
         int n = A.length;
         int m = A[0].length;
 
+        double alpha;
+        double r;
+        double[] v;
+
+        double[][] P = new double[n][n];
+
         for (int k = 0; k < m - 2; k++) {
-            double[] v = new double[n];
+            v = new double[n];
             for (int j = k + 1; j < n; j++) {
                 v[j] = A[j][k];
             }
             
-            double alpha = -sgn(v[k + 1]) * DNRM2(v);
-            double r = Math.sqrt(0.5 * ((alpha * alpha) - (v[k + 1] * alpha)));
+            alpha = -sgn(v[k + 1]) * DNRM2(v);
+            r = 2.0 * Math.sqrt(0.5 * ((alpha * alpha) - (alpha * v[k + 1])));
 
-            v[k + 1] = (v[k + 1] - alpha) / (2.0 * r);
+            v[k + 1] = (v[k + 1] - alpha) / (r);
             for (int j = k + 2; j < n; j++) {
-                v[j] = v[j] / (2.0 * r); 
+                v[j] = v[j] / r; 
             }
 
-            double[][] P = mAdd(identity(n), mul2OuterProd(v));
+            P = mAdd(identity(n), mul2OuterProd(v));
             A = GEMM(GEMM(P, A), P);
         }
 
@@ -228,11 +231,27 @@ class Main {
     }
 
     public static void main(String[] args) {
-        // double[][] test = rndHermitian(7);
-        // double[][] test = {{-1.0, -1.0, 1.0}, {1.0, 3.0, 3.0}, {-1.0, -1.0, 5.0}};
-        double[][] test = {{4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -2.0}, {2.0, 1.0, -2.0, -1.0}};
-        printMat(test);
-        double[][] res = householder(test);
-        printMat(res);
+        int iter;
+        int size;
+
+        if (args.length == 2) {
+            iter = Integer.parseInt(args[0]);
+            size = Integer.parseInt(args[1]);
+            System.out.println("Running " + iter + " iterations of size " + size);
+        } else {
+            iter = 64;
+            size = 256;
+            System.out.println("To specify iterations and size, run:\n    java Main <iterations> <size>");
+            System.out.println("Proceeding with default values: %d iterations of size %d".formatted(iter, size));
+        }
+
+        for (int i = 0; i < iter; i++) {
+            tridiagonalize(rndSymmetric(size));
+            System.out.println(i);
+        }
+
+        // Basic validation test for tridiagonalization algorithm
+        // double[][] test = {{4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -2.0}, {2.0, 1.0, -2.0, -1.0}};
+        // printMat(tridiagonalize(test));
     }
 }
