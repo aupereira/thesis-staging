@@ -171,34 +171,6 @@ class Main {
         return C;
     }
 
-    static double[][] householder(double[][] R) {
-        int n = R.length;
-        int m = R[0].length;
-
-        double[][] Q = new double[n][n];
-        double[][] H;
-        double[] v;
-
-        for (int k = 0; k < m - 1; k++) {
-            v = new double[n];
-            for (int j = k; j < n; j++) {
-                v[j] = R[j][k];
-            }
-
-            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * sgn(v[k + 1])));
-            vDivS(v, DNRM2(v));
-            H = mAdd(identity(n), mul2OuterProd(v));
-            R = GEMM(H, R);
-            if (k == 0) {
-                Q = H;
-            } else {
-                Q = GEMM(Q, H);
-            }
-        }
-        
-        return R;
-    }
-
     static double[][] tridiagonalize(double[][] A) {
         int n = A.length;
         int m = A[0].length;
@@ -230,28 +202,151 @@ class Main {
         return A;
     }
 
+    static double[][] householder_no_shift(double[][] R) {
+        int n = R.length;
+        int m = R[0].length;
+
+        double[][] Q = new double[n][n];
+        double[][] H;
+        double[] v;
+
+        for (int k = 0; k < m - 1; k++) {
+            v = new double[n];
+            for (int j = k; j < n; j++) {
+                v[j] = R[j][k];
+            }
+
+            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * sgn(v[k + 1])));
+            vDivS(v, DNRM2(v));
+            H = mAdd(identity(n), mul2OuterProd(v));
+            R = GEMM(H, R);
+            if (k == 0) {
+                Q = H;
+            } else {
+                Q = GEMM(Q, H);
+            }
+        }
+        
+        return GEMM(R, Q);
+    }
+
+    static double[][] householder(double[][] A) {
+        int n = A.length;
+        int m = A[0].length;
+
+        double[][] Q = new double[n][n];
+        double[][] H;
+        double[] v;
+
+        double s = A[n - 1][n - 1];
+        double t = A[n - 2][n - 2];
+        double x = A[n - 2][n - 1];
+        double d = (t - s) / 2;
+        double shift = s - x * x / (d + (d >= 0 ? 1 : -1) * Math.sqrt(d * d + x * x));
+
+        for (int i = 0; i < n; i++) {
+            A[i][i] -= shift;
+        }
+
+        for (int k = 0; k < m - 1; k++) {
+            v = new double[n];
+            for (int j = k; j < n; j++) {
+                v[j] = A[j][k];
+            }
+
+            v = vAdd(v, vMulS(stdBasis(n, k), DNRM2(v) * sgn(v[k + 1])));
+            vDivS(v, DNRM2(v));
+            H = mAdd(identity(n), mul2OuterProd(v));
+            A = GEMM(H, A);
+            if (k == 0) {
+                Q = H;
+            } else {
+                Q = GEMM(Q, H);
+            }
+        }
+
+        A = GEMM(A, Q);
+
+        for (int i = 0; i < n; i++) {
+            A[i][i] += shift;
+        }
+        
+        return A;
+    }
+
+    static double[] eigQR(double[][] A) {
+        double[] vals = new double[A.length];
+
+        double currentEigenvalue = A[A.length - 1][A[0].length - 1];
+        double prevEigenvalue = Double.MAX_VALUE;
+
+        int ind = A.length - 1;
+
+        while (A.length > 1) {
+            boolean flag = true;
+            while (flag) {
+                // System.out.printf("%d\n", ind); // Useful for QR input size tuning
+                A = householder(A);
+                
+                currentEigenvalue = A[A.length - 1][A[0].length - 1];
+        
+                if (Math.abs(currentEigenvalue - prevEigenvalue) < 1e-10) {
+                    vals[ind] = currentEigenvalue;
+                    
+                    flag = false;
+                    ind--;
+                    
+                    double[][] temp = new double[A.length - 1][A[0].length - 1];
+                    for (int i = 0; i < temp.length; i++) {
+                        for (int j = 0; j < temp[0].length; j++) {
+                            temp[i][j] = A[i][j];
+                        }
+                    }
+                    A = temp;
+                    
+                    prevEigenvalue = A[A.length - 1][A[0].length - 1];
+                } else {
+                    prevEigenvalue = currentEigenvalue;
+                }
+            }
+        }
+
+        vals[0] = A[0][0];
+
+        return vals;
+    }
+
     public static void main(String[] args) {
         int iter;
         int size;
 
-        if (args.length == 2) {
-            iter = Integer.parseInt(args[0]);
-            size = Integer.parseInt(args[1]);
-            System.out.println("Running " + iter + " iterations of size " + size);
-        } else {
-            iter = 64;
-            size = 256;
-            System.out.println("To specify iterations and size, run:\n    java Main <iterations> <size>");
-            System.out.println("Proceeding with default values: %d iterations of size %d".formatted(iter, size));
-        }
+        // if (args.length == 2) {
+        //     iter = Integer.parseInt(args[0]);
+        //     size = Integer.parseInt(args[1]);
+        //     System.out.println("Running " + iter + " iterations of size " + size);
+        // } else {
+        //     iter = 1;
+        //     size = 96;
+        //     System.out.println("To specify iterations and size, run:\n    java Main <iterations> <size>");
+        //     System.out.println("Proceeding with default values: %d iterations of size %d".formatted(iter, size));
+        // }
 
-        for (int i = 0; i < iter; i++) {
-            tridiagonalize(rndSymmetric(size));
-            System.out.println(i);
-        }
+        // for (int i = 0; i < iter; i++) {
+        //     eigQR(tridiagonalize(rndSymmetric(size)));
+        //     System.out.println(i);
+        // }
 
         // Basic validation test for tridiagonalization algorithm
         // double[][] test = {{4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -2.0}, {2.0, 1.0, -2.0, -1.0}};
+        // double[][] test = rndSymmetric(100);
+
+        // test = tridiagonalize(test);
         // printMat(tridiagonalize(test));
+        
+        // double[] eig = eigQR(test);
+
+        // for (int i = 0; i < eig.length; i++) {
+        //     System.out.printf("%f ", eig[i]);
+        // }
     }
 }
