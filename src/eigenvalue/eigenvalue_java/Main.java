@@ -167,12 +167,10 @@ class Main {
     }
 
     static void eigQR(double[][] A, double[] eigVals, double[][] T1, double[][] T2, double[][] T3, double[][] T4, double[][] T5, double[] v) {
-        int N = A.length;
-
         double currentEigval;
         double prevEigval = Double.MAX_VALUE;
 
-        int ind = N;
+        int ind = A.length;
 
         while (ind > 1) {
             boolean flag = true;
