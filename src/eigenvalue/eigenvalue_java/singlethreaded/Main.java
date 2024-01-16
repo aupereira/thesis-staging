@@ -54,16 +54,16 @@ class Main {
     }
     
     static double[][] S2OPAI(double[] v) {
-        int I = v.length;
-        double[][] A = new double[I][I];
+        int len = v.length;
+        double[][] A = new double[len][len];
         
-        for (int i = 0; i < I; i++) {
-            for (int j = 0; j < I; j++) {
+        for (int i = 0; i < len; i++) {
+            for (int j = 0; j < len; j++) {
                 A[i][j] = -2.0 * v[i] * v[j];
             }
         }
 
-        for (int i = 0; i < I; i++) {
+        for (int i = 0; i < len; i++) {
             A[i][i] += 1.0;
         }
         
@@ -182,39 +182,35 @@ class Main {
     }
 
     static double[] eigQR(double[][] A) {
-        double[] vals = new double[A.length];
+        int ind = A.length;
+
+        double[] vals = new double[ind];
 
         double currentEigval;
         double prevEigval = Double.MAX_VALUE;
 
-        int ind = A.length;
-
         while (ind > 1) {
-            boolean flag = true;
-            while (flag) {
-                // System.out.printf("%d\n", ind); // Useful for QR input size tuning
-                A = householder(A);
+            // System.out.printf("%d\n", ind); // Useful for QR input size tuning
+            A = householder(A);
+            
+            currentEigval = A[ind - 1][ind - 1];
+    
+            if (Math.abs(currentEigval - prevEigval) < 1e-10) {
+                vals[ind - 1] = currentEigval;
                 
-                currentEigval = A[ind - 1][ind - 1];
-        
-                if (Math.abs(currentEigval - prevEigval) < 1e-10) {
-                    vals[ind - 1] = currentEigval;
-                    
-                    flag = false;
-                    ind--;
-                    
-                    double[][] temp = new double[ind][ind];
-                    for (int i = 0; i < temp.length; i++) {
-                        for (int j = 0; j < temp[0].length; j++) {
-                            temp[i][j] = A[i][j];
-                        }
+                ind--;
+                
+                double[][] temp = new double[ind][ind];
+                for (int i = 0; i < temp.length; i++) {
+                    for (int j = 0; j < temp[0].length; j++) {
+                        temp[i][j] = A[i][j];
                     }
-                    A = temp;
-                    
-                    prevEigval = A[ind - 1][ind - 1];
-                } else {
-                    prevEigval = currentEigval;
                 }
+                A = temp;
+                
+                prevEigval = A[ind - 1][ind - 1];
+            } else {
+                prevEigval = currentEigval;
             }
         }
 

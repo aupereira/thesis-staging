@@ -173,26 +173,24 @@ class Main {
         int ind = A.length;
 
         while (ind > 1) {
-            boolean flag = true;
-            while (flag) {
-                // System.out.printf("%d\n", ind); // Useful for QR input size tuning
-                householder(ind, A, T1, T2, T3, T4, T5, v);
+            // System.out.printf("%d\n", ind); // Useful for QR input size tuning
+            householder(ind, A, T1, T2, T3, T4, T5, v);
+            
+            currentEigval = A[ind - 1][ind - 1];
+    
+            if (Math.abs(currentEigval - prevEigval) < 1e-10) {
+                eigVals[ind - 1] = currentEigval;
                 
-                currentEigval = A[ind - 1][ind - 1];
-        
-                if (Math.abs(currentEigval - prevEigval) < 1e-10) {
-                    eigVals[ind - 1] = currentEigval;
-                    
-                    flag = false;
-                    ind--;
-                    
-                    prevEigval = A[ind - 1][ind - 1];
-                } else {
-                    prevEigval = currentEigval;
-                }
+                ind--;
+                
+                prevEigval = A[ind - 1][ind - 1];
+            } else {
+                prevEigval = currentEigval;
             }
-            eigVals[0] = A[0][0];
+        
         }
+        
+        eigVals[0] = A[0][0];
     }
 
     static void eigenLoop(int size, int loops) {
