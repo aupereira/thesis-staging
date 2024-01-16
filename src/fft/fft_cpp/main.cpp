@@ -37,6 +37,8 @@ void fft(std::vector<std::complex<double>> &x) {
 }
 
 void fftLoop(int size, int loops) {
+    srand(time(0));
+
     std::vector<std::complex<double>> x(size);
 
     for (int loop; loop < loops; loop++) {
@@ -56,8 +58,6 @@ int main(int argc, char *argv[]) {
     auto fftSize = 1 << std::stoi(argv[1]);
     auto numLoops = std::stoi(argv[2]);
     auto numThreads = std::stoi(argv[3]);
-
-    srand(time(0));
 
     std::vector<std::thread> threads(numThreads);
 

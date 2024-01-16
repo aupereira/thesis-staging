@@ -1,6 +1,3 @@
-// Currently fully supports Windows GCC, Linux GCC, and Linux Clang
-// Does not support Windows MSVC
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
@@ -14,17 +11,44 @@
 #include <pthread.h>
 #endif
 
+#if _MSC_VER
+#define dComplex _Dcomplex
+
+_Dcomplex _Caddcc(_Dcomplex a, _Dcomplex b) {
+    double real = creal(a) + creal(b);
+    double imag = cimag(a) + cimag(b);
+    return _Cbuild(real, imag);
+}
+
+_Dcomplex _Csubcc(_Dcomplex a, _Dcomplex b) {
+    double real = creal(a) - creal(b);
+    double imag = cimag(a) - cimag(b);
+    return _Cbuild(real, imag);
+}
+
+#else
+#define dComplex double complex
+#endif
+
 #define M_PI 3.14159265358979323846
 
 int fftSize, numLoops;
 
-void fft(double complex *x, int N) {
+dComplex randComplex() {
+    #if _MSC_VER
+    return _Cbuild((double)rand()/RAND_MAX, (double)rand()/RAND_MAX);
+    #else
+    return (double)rand()/RAND_MAX, (double)rand()/RAND_MAX*I;
+    #endif
+}
+
+void fft(dComplex *x, int N) {
     if (N == 1) {
         return;
     }
 
-    double complex *even = malloc(N/2 * sizeof(double complex));
-    double complex *odd = malloc(N/2 * sizeof(double complex));
+    dComplex *even = malloc(N/2 * sizeof(dComplex));
+    dComplex *odd = malloc(N/2 * sizeof(dComplex));
 
     for (int i = 0; i < N/2; i++) {
         even[i] = x[2*i];
@@ -35,9 +59,15 @@ void fft(double complex *x, int N) {
     fft(odd, N/2);
 
     for (int k = 0; k < N/2; k++) {
-        double complex t = cexp(-2.0 * M_PI * I * k / N) * odd[k];
+        #if _MSC_VER
+        dComplex t = _Cmulcc(cexp(_Cmulcc(_Cbuild(-2.0 * M_PI * k / N, 0),_Cbuild(0.0, 1.0))), odd[k]);
+        x[k] = _Caddcc(even[k], t);
+        x[k + N / 2] = _Csubcc(even[k], t);
+        #else
+        dComplex t = cexp(-2.0 * M_PI * I * k / N) * odd[k];
         x[k] = even[k] + t;
         x[k + N / 2] = even[k] - t;
+        #endif
     }
 
     free(even);
@@ -45,11 +75,13 @@ void fft(double complex *x, int N) {
 }
 
 void fftLoop(int size, int loops) {
-    double complex *x = malloc(size * sizeof(double complex));
+    srand(time(NULL));
+
+    dComplex *x = malloc(size * sizeof(dComplex));
     
     for (int loop = 0; loop < loops; loop++) {
         for (int i = 0; i < size; i++) {
-            x[i] = (double)rand()/RAND_MAX + (double)rand()/RAND_MAX*I;
+            x[i] = randComplex();
         }
         fft(x, size);
     }
@@ -81,10 +113,6 @@ int main(int argc, char *argv[]) {
     numLoops = atoi(argv[2]);
     int numThreads = atoi(argv[3]);
 
-    printf("%d\n", fftSize);
-
-    srand(time(NULL));
-
     #ifdef _WIN64
         HANDLE* hThreads = malloc(numThreads * sizeof(HANDLE));
 
@@ -98,7 +126,7 @@ int main(int argc, char *argv[]) {
                 NULL);
 
             if (hThreads[i] == NULL) {
-                printf("CreateThread failed (%d)\n", GetLastError());
+                printf("CreateThread failed (%lu)\n", GetLastError());
                 return 1;
             }
         }
