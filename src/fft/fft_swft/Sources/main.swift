@@ -1,7 +1,6 @@
 import Foundation
 
-public struct Complex
-{
+public struct Complex {
     var real: Double
     var imag: Double
 
@@ -11,32 +10,32 @@ public struct Complex
     }
 
     static func Imag() -> Complex {
-        return Complex(0, 1);
+        Complex(0, 1)
     }
 
     static func ToComplex(_ real: Double) -> Complex {
-        return Complex(real, 0);
+        Complex(real, 0)
     }
 
     func Add(_ b: Complex) -> Complex {
-        return Complex(self.real + b.real, self.imag + b.imag);
+        Complex(real + b.real, imag + b.imag)
     }
 
     func Sub(_ b: Complex) -> Complex {
-        return Complex(self.real - b.real, self.imag - b.imag);
+        Complex(real - b.real, imag - b.imag)
     }
 
     func Mul(_ b: Complex) -> Complex {
-        return Complex(self.real * b.real - self.imag * b.imag, self.real * b.imag + self.imag * b.real);
+        Complex(real * b.real - imag * b.imag, real * b.imag + imag * b.real)
     }
 
     static func Exp(_ p: Complex) -> Complex {
-        return Complex(exp(p.real) * cos(p.imag), exp(p.real) * sin(p.imag));
+        Complex(exp(p.real) * cos(p.imag), exp(p.real) * sin(p.imag))
     }
 }
 
 func randComplex() -> Complex {
-    return Complex(Double.random(in: 0...1), Double.random(in: 0...1))
+    Complex(Double.random(in: 0 ... 1), Double.random(in: 0 ... 1))
 }
 
 func fft(_ x: inout [Complex]) {
@@ -59,23 +58,22 @@ func fft(_ x: inout [Complex]) {
 
     var t = Complex(0, 0)
 
-    for k in 0..<n/2 {
+    for k in 0 ..< n / 2 {
         t = Complex.Exp(Complex.ToComplex(-2.0 * Double.pi * Double(k) / Double(n)).Mul(Complex.Imag())).Mul(odd[k])
         x[k] = even[k].Add(t)
         x[k + n / 2] = even[k].Sub(t)
     }
 }
 
-func fftLoop(size: Int, loops: Int) async -> Void {
+func fftLoop(size: Int, loops: Int) async {
     let cmplx = Complex(0, 0)
     var x = [Complex](repeating: cmplx, count: size)
 
-    for e in 0..<loops {
-        for i in 0..<size {
+    for e in 0 ..< loops {
+        for i in 0 ..< size {
             x[i] = randComplex()
         }
         fft(&x)
-        print(e)
     }
 }
 
@@ -90,7 +88,7 @@ func main() async {
     let numThreads = Int(CommandLine.arguments[3])!
 
     var tasks = [Task<Void, Never>]()
-    for _ in 0..<numThreads {
+    for _ in 0 ..< numThreads {
         let task = Task {
             await fftLoop(size: fftSize, loops: numLoops)
         }

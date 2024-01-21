@@ -1,61 +1,58 @@
+# frozen_string_literal: true
+
 def rand_complex
-    Complex(rand, rand)
+  Complex(rand, rand)
 end
 
 def fft(x)
-    n = x.length
-    
-    return x if n <= 1
+  n = x.length
 
-    even = Array.new(n / 2) { |i| x[2 * i] }
-    odd = Array.new(n / 2) { |i| x[2 * i + 1] }
+  return x if n <= 1
 
-    fft(even)
-    fft(odd)
+  even = Array.new(n / 2) { |i| x[2 * i] }
+  odd = Array.new(n / 2) { |i| x[2 * i + 1] }
 
-    for k in 0..(n / 2 - 1)
-        t = Math::E ** (-2 * Math::PI * k / n * Complex(0, 1)) * Complex(odd[k], 0)
-        x[k] = even[k] + t
-        x[k + n / 2] = even[k] - t
-    end    
+  fft(even)
+  fft(odd)
+
+  (0...(n / 2)).each do |k|
+    t = Math::E**(-2 * Math::PI * k / n * Complex(0, 1)) * Complex(odd[k], 0)
+    x[k] = even[k] + t
+    x[k + n / 2] = even[k] - t
+  end
 end
 
 def fft_loop(size, loops)
-    x = Array.new(size)
+  x = Array.new(size)
 
-    loops.times do
-        size.times do |i| 
-            x[i] = rand_complex
-        end
-        fft(x)
+  loops.times do
+    size.times do |i|
+      x[i] = rand_complex
     end
+    fft(x)
+  end
 end
 
 def main
+  if ARGV.length != 3
+    puts 'Usage: ruby fft.rb <FFT size> <num loops> <num threads>'
+    exit 1
+  end
 
-    if ARGV.length != 3
-        puts "Usage: ruby main.rb <FFT size> <num loops> <num threads>"
-        exit 1
+  fft_size = 1 << ARGV[0].to_i
+  num_loops = ARGV[1].to_i
+  num_threads = ARGV[2].to_i
+
+  num_threads.times do |_i|
+    if ENV['OS'] == 'Windows_NT'
+      Process.spawn('ruby', '-e', "require './main'; fft_loop(#{fft_size}, #{num_loops})")
+    elsif fork.nil?
+      fft_loop(fft_size, num_loops)
+      exit 0
     end
+  end
 
-    fft_size = 2**ARGV[0].to_i
-    num_loops = ARGV[1].to_i
-    num_threads = ARGV[2].to_i
-    
-    num_threads.times do |i|
-        if (ENV['OS'] == 'Windows_NT')
-            Process.spawn("ruby", "-e", "require './main'; fft_loop(#{fft_size}, #{num_loops})")
-        else
-            if fork.nil?
-                fft_loop(fft_size, num_loops)
-                exit 0
-            end
-        end
-    end
-
-    Process.waitall
+  Process.waitall
 end
 
-if __FILE__ == $0
-    main
-end
+main if __FILE__ == $PROGRAM_NAME

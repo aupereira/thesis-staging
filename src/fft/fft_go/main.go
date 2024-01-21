@@ -3,21 +3,12 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"math/cmplx"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
 )
-
-func intPow(base int64, exp int64) int64 {
-	result := int64(1)
-	for exp > 0 {
-		result *= base
-		exp--
-	}
-	return result
-}
 
 func randComplex() complex128 {
 	return complex(rand.Float64(), rand.Float64())
@@ -42,7 +33,7 @@ func fft(x *[]complex128) {
 	fft(&odd)
 
 	for k := 0; k < n/2; k++ {
-		t := cmplx.Exp(-2 * math.Pi * complex(float64(k), 0) * complex(0, 1) / complex(float64(n), 0)) * odd[k]
+		t := cmplx.Exp(-2*math.Pi*complex(float64(k), 0)*complex(0, 1)/complex(float64(n), 0)) * odd[k]
 		(*x)[k] = even[k] + t
 		(*x)[k+n/2] = even[k] - t
 	}
@@ -55,9 +46,8 @@ func fftLoop(size int64, loops int64) {
 		for i := range x {
 			x[i] = randComplex()
 		}
+		fft(&x)
 	}
-
-	return
 }
 
 func main() {
@@ -75,8 +65,8 @@ func main() {
 		}
 		args[i] = arg
 	}
-	
-	args[0] = intPow(int64(2), args[0])
+
+	args[0] = 1 << args[0]
 
 	var wg sync.WaitGroup
 	wg.Add(int(args[2]))
