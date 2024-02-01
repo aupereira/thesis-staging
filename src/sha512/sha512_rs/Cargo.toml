@@ -1,0 +1,13 @@
+[package]
+name = "sha512_rs"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+num = "0.4.1"
+rand = "0.8.5"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
