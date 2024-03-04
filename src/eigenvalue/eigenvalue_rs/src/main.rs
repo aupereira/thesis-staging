@@ -155,7 +155,7 @@ fn eig_QR(A: &mut Vec<Vec<f64>>, eig_vals: &mut Vec<f64>, T1: &mut Vec<Vec<f64>>
 
         current_eigval = A[ind - 1][ind - 1];
 
-        if (current_eigval - prev_eigval).abs() < 1e-10 {
+        if (current_eigval - prev_eigval).abs() < 1e-5 {
             eig_vals[ind - 1] = current_eigval;
             
             ind -= 1;

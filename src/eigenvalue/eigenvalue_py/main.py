@@ -140,7 +140,7 @@ def eig_QR(A):
 
         currentEigval = A[ind - 1][ind - 1]
 
-        if (abs(currentEigval - prevEigval) < 1e-10):
+        if (abs(currentEigval - prevEigval) < 1e-5):
             vals[ind - 1] = currentEigval
 
             ind -= 1

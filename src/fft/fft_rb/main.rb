@@ -44,11 +44,19 @@ def main
   num_threads = ARGV[2].to_i
 
   num_threads.times do |_i|
-    if ENV['OS'] == 'Windows_NT'
-      Process.spawn('ruby', '-e', "require './main'; fft_loop(#{fft_size}, #{num_loops})")
-    elsif fork.nil?
-      fft_loop(fft_size, num_loops)
-      exit 0
+    if RUBY_ENGINE == 'jruby'
+      Thread.new do
+        fft_loop(fft_size, num_loops)
+      end
+    elsif RUBY_ENGINE == 'truffleruby'
+      Process.spawn('truffleruby', '-e', "require './#{__FILE__}'; fft_loop(#{fft_size}, #{num_loops})")
+    elsif RUBY_ENGINE == 'ruby'
+      if ENV['OS'] == 'Windows_NT'
+        Process.spawn('ruby', '-e', "require './#{__FILE__}'; fft_loop(#{fft_size}, #{num_loops})")
+      elsif fork.nil?
+        fft_loop(fft_size, num_loops)
+        exit 0
+      end
     end
   end
 

@@ -171,7 +171,7 @@ void eigQR(MatrixDouble &A, VectorDouble &eigVals, MatrixDouble &T1, MatrixDoubl
 
         currentEigval = A[ind - 1][ind - 1];
 
-        if (std::abs(currentEigval - prevEigval) < 1e-10) {
+        if (std::abs(currentEigval - prevEigval) < 1e-5) {
             eigVals[ind - 1] = currentEigval;
 
             ind--;

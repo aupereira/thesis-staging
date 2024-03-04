@@ -212,9 +212,9 @@ void sha512(char *filePath)
     }
 
 #ifdef __linux__
-    fseeko64(f, 0, SEEK_END);
-    totalBytes = (size_t)ftello64(f);
-    fseeko64(f, 0, SEEK_SET);
+    fseek(f, 0, SEEK_END);
+    totalBytes = (size_t)ftell(f);
+    fseek(f, 0, SEEK_SET);
 #endif
 #ifdef __WIN64__
     _fseeki64(f, 0, SEEK_END);

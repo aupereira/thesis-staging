@@ -6,7 +6,7 @@
 
 #include <float.h> // Maybe remove the DBL_MAX!?
 
-#ifdef _WIN32
+#ifdef __WIN64__
 #include <Windows.h>
 #endif
 
@@ -192,7 +192,7 @@ void eigQR(size_t N, double A[N][N], double eigvals[N], double T1[N][N], double 
 
         currentEigval = A[ind - 1][ind - 1];
 
-        if (fabs(currentEigval - prevEigval) < 1e-10) {
+        if (fabs(currentEigval - prevEigval) < 1e-5) {
             // printf("\n%zu", ind - 1); // Useful for QR input size tuning
             eigvals[ind - 1] = currentEigval;
             
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
     numLoops = atoi(argv[2]);
     numThreads = atoi(argv[3]);
     
-    #ifdef _WIN64
+    #ifdef __WIN64__
         HANDLE* hThreads = malloc(numThreads * sizeof(HANDLE));
 
         for (int i = 0; i < numThreads; i++) {

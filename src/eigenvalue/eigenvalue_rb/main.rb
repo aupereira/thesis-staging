@@ -140,7 +140,7 @@ def eig_qr(a, eig_vals, t1, t2, t3, t4, t5, v)
 
         current_eigval = a[ind - 1][ind - 1]
 
-        if (current_eigval - prev_eigval).abs < 1e-10
+        if (current_eigval - prev_eigval).abs < 1e-5
             eig_vals[ind - 1] = current_eigval
             
             ind -= 1
@@ -185,11 +185,17 @@ def main
     num_threads = ARGV[2].to_i
 
     num_threads.times do |i|
-        if (ENV['OS'] == 'Windows_NT')
-            Process.spawn("ruby", "-e", "require './main'; eigen_loop(#{m_size}, #{num_loops})")
-        else
-            if fork.nil?
-                fft_loop(fft_size, num_loops)
+        if RUBY_ENGINE == 'jruby'
+            Thread.new do
+                eigen_loop(m_size, num_loops)
+            end
+        elsif RUBY_ENGINE == 'truffleruby'
+            Process.spawn('truffleruby', '-e', "require './#{__FILE__}'; eigen_loop(#{m_size}, #{num_loops})")
+        elsif RUBY_ENGINE == 'ruby'
+            if ENV['OS'] == 'Windows_NT'
+                Process.spawn('ruby', '-e', "require './#{__FILE__}'; eigen_loop(#{m_size}, #{num_loops})")
+            elsif fork.nil?
+                eigen_loop(m_size, num_loops)
                 exit 0
             end
         end

@@ -178,7 +178,7 @@ class Main {
             
             currentEigval = A[ind - 1][ind - 1];
     
-            if (Math.abs(currentEigval - prevEigval) < 1e-10) {
+            if (Math.abs(currentEigval - prevEigval) < 1e-5) {
                 eigVals[ind - 1] = currentEigval;
                 
                 ind--;

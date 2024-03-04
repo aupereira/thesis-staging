@@ -188,8 +188,6 @@ func householder(
     for i in 0..<len {
         A[i][i] += shift
     }
-
-    printMatrix(A)
 }
 
 func eigQR(
@@ -212,7 +210,7 @@ func eigQR(
 
         currentEigval = A[ind - 1][ind - 1]
 
-        if abs(currentEigval - prevEigval) < 1e-10 {
+        if abs(currentEigval - prevEigval) < 1e-5 {
             eigVals[ind - 1] = currentEigval
 
             ind -= 1

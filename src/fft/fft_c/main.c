@@ -41,7 +41,7 @@ dComplex randComplex()
 #if _MSC_VER
     return _Cbuild((double)rand() / RAND_MAX, (double)rand() / RAND_MAX);
 #else
-    return (double)rand() / RAND_MAX, (double)rand() / RAND_MAX * I;
+    return (((double)rand() / RAND_MAX) + ((double)rand() / RAND_MAX * I));
 #endif
 }
 

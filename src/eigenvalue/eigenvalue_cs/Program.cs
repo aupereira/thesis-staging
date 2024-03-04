@@ -177,7 +177,7 @@
 
             currentEigval = A[ind - 1, ind - 1];
 
-            if (Math.Abs(currentEigval - prevEigval) < 1e-10) {
+            if (Math.Abs(currentEigval - prevEigval) < 1e-5) {
                 // Console.WriteLine(ind - 1); // Useful for QR input size tuning
                 eigVals[ind - 1] = currentEigval;
                 

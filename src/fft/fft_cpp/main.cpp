@@ -47,7 +47,7 @@ void fftLoop(int size, int loops)
 
     std::vector<std::complex<double>> x(size);
 
-    for (int loop; loop < loops; loop++)
+    for (int loop = 0; loop < loops; loop++)
     {
         for (int i = 0; i < size; i++)
         {
