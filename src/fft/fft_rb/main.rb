@@ -1,33 +1,45 @@
 # frozen_string_literal: true
 
-def rand_complex
-  Complex(rand, rand)
-end
-
 def fft(x)
   n = x.length
 
-  return x if n <= 1
+  return x if n == 2
 
-  even = Array.new(n / 2) { |i| x[2 * i] }
-  odd = Array.new(n / 2) { |i| x[2 * i + 1] }
+  even = Array.new(n / 2)
+  odd = Array.new(n / 2)
+
+  (0...(n / 2)).step(2) do |i|
+    even[i] = x[2 * i]
+    even[i + 1] = x[2 * i + 1]
+    odd[i] = x[2 * i + 2]
+    odd[i + 1] = x[2 * i + 3]
+  end
 
   fft(even)
   fft(odd)
 
-  (0...(n / 2)).each do |k|
-    t = Math::E**(-2 * Math::PI * k / n * Complex(0, 1)) * Complex(odd[k], 0)
-    x[k] = even[k] + t
-    x[k + n / 2] = even[k] - t
+  (0...(n / 2)).step(2) do |k|
+    imag = -2 * Math::PI * k / n
+    real = Math.cos(imag)
+    imag = Math.sin(imag)
+
+    t_real = real * odd[k] - imag * odd[k + 1]
+    t_imag = real * odd[k + 1] + imag * odd[k]
+
+    x[k] = even[k] + t_real
+    x[k + 1] = even[k + 1] + t_imag
+
+    x[k + n / 2] = even[k] - t_real
+    x[k + n / 2 + 1] = even[k + 1] - t_imag
   end
 end
 
 def fft_loop(size, loops)
-  x = Array.new(size)
+  x = Array.new(2 * size)
 
   loops.times do
-    size.times do |i|
-      x[i] = rand_complex
+    (2*size).times do |i|
+      x[i] = rand()
     end
     fft(x)
   end
@@ -61,6 +73,7 @@ def main
   end
 
   Process.waitall
+
 end
 
 main if __FILE__ == $PROGRAM_NAME

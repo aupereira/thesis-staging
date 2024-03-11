@@ -1,4 +1,4 @@
-#include <complex.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -11,70 +11,47 @@
 #include <pthread.h>
 #endif
 
-#if _MSC_VER
-#define dComplex _Dcomplex
-
-_Dcomplex _Caddcc(_Dcomplex a, _Dcomplex b)
-{
-    double real = creal(a) + creal(b);
-    double imag = cimag(a) + cimag(b);
-    return _Cbuild(real, imag);
-}
-
-_Dcomplex _Csubcc(_Dcomplex a, _Dcomplex b)
-{
-    double real = creal(a) - creal(b);
-    double imag = cimag(a) - cimag(b);
-    return _Cbuild(real, imag);
-}
-
-#else
-#define dComplex double complex
-#endif
-
 #define M_PI 3.14159265358979323846
 
 int fftSize, numLoops;
 
-dComplex randComplex()
+void fft(int N, double x[N])
 {
-#if _MSC_VER
-    return _Cbuild((double)rand() / RAND_MAX, (double)rand() / RAND_MAX);
-#else
-    return (((double)rand() / RAND_MAX) + ((double)rand() / RAND_MAX * I));
-#endif
-}
+    double real, imag, tReal, tImag;
 
-void fft(dComplex *x, int N)
-{
-    if (N == 1)
+    if (N == 2)
     {
         return;
     }
 
-    dComplex *even = malloc(N / 2 * sizeof(dComplex));
-    dComplex *odd = malloc(N / 2 * sizeof(dComplex));
+    double *even = malloc(N / 2 * sizeof(double));
+    double *odd = malloc(N / 2 * sizeof(double));
 
-    for (int i = 0; i < N / 2; i++)
+    for (int i = 0; i < N / 2; i += 2)
     {
         even[i] = x[2 * i];
-        odd[i] = x[2 * i + 1];
+        even[i + 1] = x[2 * i + 1];
+        odd[i] = x[2 * i + 2];
+        odd[i + 1] = x[2 * i + 3];
     }
 
-    fft(even, N / 2);
-    fft(odd, N / 2);
+    fft(N / 2, even);
+    fft(N / 2, odd);
 
-    for (int k = 0; k < N / 2; k++)
+    for (int k = 0; k < N / 2; k += 2)
     {
-#if _MSC_VER
-        dComplex t = _Cmulcc(cexp(_Cmulcc(_Cbuild(-2.0 * M_PI * k / N, 0), _Cbuild(0.0, 1.0))), odd[k]);
-        x[k] = _Caddcc(even[k], t);
-        x[k + N / 2] = _Csubcc(even[k], t);
-#else
-        dComplex t = cexp(-2.0 * M_PI * I * k / N) * odd[k];
-        x[k] = even[k] + t;
-        x[k + N / 2] = even[k] - t;
-#endif
+        imag = -2 * M_PI * k / N;
+        real = cos(imag);
+        imag = sin(imag);
+
+        tReal = real * odd[k] - imag * odd[k + 1];
+        tImag = real * odd[k + 1] + imag * odd[k];
+
+        x[k] = even[k] + tReal;
+        x[k + 1] = even[k + 1] + tImag;
+
+        x[k + N / 2] = even[k] - tReal;
+        x[k + N / 2 + 1] = even[k + 1] - tImag;
     }
 
     free(even);
@@ -85,21 +62,21 @@ void fftLoop(int size, int loops)
 {
     srand(time(NULL));
 
-    dComplex *x = malloc(size * sizeof(dComplex));
+    double *x = malloc(2 * size * sizeof(double));
 
     for (int loop = 0; loop < loops; loop++)
     {
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < 2 * size; i++)
         {
-            x[i] = randComplex();
+            x[i] = (double)rand() / (double)RAND_MAX;
         }
-        fft(x, size);
+        fft(2 * size, x);
     }
 
     free(x);
 }
 
-#ifdef _WIN64
+#ifdef __WIN64__
 DWORD WINAPI WinThreadProc(LPVOID lpParam)
 {
     fftLoop(fftSize, numLoops);
@@ -127,7 +104,7 @@ int main(int argc, char *argv[])
     numLoops = atoi(argv[2]);
     int numThreads = atoi(argv[3]);
 
-#ifdef _WIN64
+#ifdef __WIN64__
     HANDLE *hThreads = malloc(numThreads * sizeof(HANDLE));
 
     for (int i = 0; i < numThreads; i++)

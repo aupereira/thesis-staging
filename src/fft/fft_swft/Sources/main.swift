@@ -1,77 +1,49 @@
 import Foundation
 
-public struct Complex {
-    var real: Double
-    var imag: Double
-
-    init(_ real: Double, _ imag: Double) {
-        self.real = real
-        self.imag = imag
-    }
-
-    static func Imag() -> Complex {
-        Complex(0, 1)
-    }
-
-    static func ToComplex(_ real: Double) -> Complex {
-        Complex(real, 0)
-    }
-
-    func Add(_ b: Complex) -> Complex {
-        Complex(real + b.real, imag + b.imag)
-    }
-
-    func Sub(_ b: Complex) -> Complex {
-        Complex(real - b.real, imag - b.imag)
-    }
-
-    func Mul(_ b: Complex) -> Complex {
-        Complex(real * b.real - imag * b.imag, real * b.imag + imag * b.real)
-    }
-
-    static func Exp(_ p: Complex) -> Complex {
-        Complex(exp(p.real) * cos(p.imag), exp(p.real) * sin(p.imag))
-    }
-}
-
-func randComplex() -> Complex {
-    Complex(Double.random(in: 0 ... 1), Double.random(in: 0 ... 1))
-}
-
-func fft(_ x: inout [Complex]) {
+func fft(_ x: inout [Double]) {
+    var real, imag, tReal, tImag: Double
+    
     let n = x.count
 
-    if n <= 1 {
+    if n == 2 {
         return
     }
 
-    var even = [Complex]()
-    var odd = [Complex]()
+    var even: [Double] = Array(repeating: 0.0, count: n / 2)
+    var odd: [Double] = Array(repeating: 0.0, count: n / 2)
 
-    for i in stride(from: 0, to: n, by: 2) {
-        even.append(x[i])
-        odd.append(x[i + 1])
+    for i in stride(from: 0, to: n / 2, by: 2) {
+        even[i] = x[i * 2]
+        even[i + 1] = x[i * 2 + 1]
+        odd[i] = x[i * 2 + 2]
+        odd[i + 1] = x[i * 2 + 3]
     }
 
     fft(&even)
     fft(&odd)
 
-    var t = Complex(0, 0)
+    for k in stride(from: 0, to: n / 2, by: 2) {
+        imag = -2 * Double.pi * Double(k) / Double(n)
+        real = cos(imag)
+        imag = sin(imag)
 
-    for k in 0 ..< n / 2 {
-        t = Complex.Exp(Complex.ToComplex(-2.0 * Double.pi * Double(k) / Double(n)).Mul(Complex.Imag())).Mul(odd[k])
-        x[k] = even[k].Add(t)
-        x[k + n / 2] = even[k].Sub(t)
+        tReal = real * odd[k] - imag * odd[k + 1]
+        tImag = real * odd[k + 1] + imag * odd[k]
+
+        x[k] = even[k] + tReal
+        x[k + 1] = even[k + 1] + tImag
+
+        x[k + n / 2] = even[k] - tReal
+        x[k + n / 2 + 1] = even[k + 1] - tImag
     }
 }
 
 func fftLoop(size: Int, loops: Int) async {
-    let cmplx = Complex(0, 0)
-    var x = [Complex](repeating: cmplx, count: size)
+    var x: [Double] = Array(repeating: 0.0, count: 2 * size)
 
-    for e in 0 ..< loops {
-        for i in 0 ..< size {
-            x[i] = randComplex()
+    for _ in 0 ..< loops {
+        for i in 0 ..< x.count {
+            x[i] = Double.random(in: 0 ... 1)
         }
         fft(&x)
     }

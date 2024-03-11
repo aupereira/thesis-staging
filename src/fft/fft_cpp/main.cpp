@@ -1,4 +1,4 @@
-#include <complex>
+#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -7,37 +7,45 @@
 
 #define M_PI 3.14159265358979323846
 
-std::complex<double> randComplex()
-{
-    return std::complex<double>(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX);
-}
-
-void fft(std::vector<std::complex<double>> &x)
+void fft(std::vector<double> &x)
 {
     int n = x.size();
 
-    if (n <= 1)
+    double real, imag, tReal, tImag;
+
+    if (n == 2)
     {
         return;
     }
 
-    std::vector<std::complex<double>> even(n / 2);
-    std::vector<std::complex<double>> odd(n / 2);
+    std::vector<double> even(n / 2);
+    std::vector<double> odd(n / 2);
 
-    for (int i = 0; i < n / 2; i++)
+    for (int i = 0; i < n / 2; i += 2)
     {
-        even[i] = x[i * 2];
-        odd[i] = x[i * 2 + 1];
+        even[i] = x[2 * i];
+        even[i + 1] = x[2 * i + 1];
+        odd[i] = x[2 * i + 2];
+        odd[i + 1] = x[2 * i + 3];
     }
 
     fft(even);
     fft(odd);
 
-    for (int k = 0; k < n / 2; k++)
+    for (int k = 0; k < n / 2; k += 2)
     {
-        std::complex<double> t = std::exp(-2.0 * M_PI * double(k) / double(n) * std::complex<double>(0, 1)) * odd[k];
-        x[k] = even[k] + t;
-        x[k + n / 2] = even[k] - t;
+        imag = -2 * M_PI * k / n;
+        real = cos(imag);
+        imag = sin(imag);
+
+        tReal = real * odd[k] - imag * odd[k + 1];
+        tImag = real * odd[k + 1] + imag * odd[k];
+
+        x[k] = even[k] + tReal;
+        x[k + 1] = even[k + 1] + tImag;
+
+        x[k + n / 2] = even[k] - tReal;
+        x[k + n / 2 + 1] = even[k + 1] - tImag;
     }
 }
 
@@ -45,13 +53,13 @@ void fftLoop(int size, int loops)
 {
     srand(time(0));
 
-    std::vector<std::complex<double>> x(size);
+    std::vector<double> x(2 * size);
 
     for (int loop = 0; loop < loops; loop++)
     {
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < 2 * size; i++)
         {
-            x[i] = randComplex();
+            x[i] = (double)rand() / (double)RAND_MAX;
         }
         fft(x);
     }
@@ -71,12 +79,12 @@ int main(int argc, char *argv[])
 
     std::vector<std::thread> threads(numThreads);
 
-    for (auto &thread : threads)
+    for (std::thread &thread : threads)
     {
         thread = std::thread(fftLoop, fftSize, numLoops);
     }
 
-    for (auto &thread : threads)
+    for (std::thread &thread : threads)
     {
         thread.join();
     }

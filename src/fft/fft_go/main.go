@@ -3,48 +3,56 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/cmplx"
 	"math/rand"
 	"os"
 	"strconv"
 	"sync"
 )
 
-func randComplex() complex128 {
-	return complex(rand.Float64(), rand.Float64())
-}
-
-func fft(x *[]complex128) {
+func fft(x *[]float64) {
+	var real, imag, tReal, tImag float64
+	
 	n := len(*x)
 
-	if n <= 1 {
+	if n == 2 {
 		return
 	}
 
-	even := make([]complex128, n/2)
-	odd := make([]complex128, n/2)
+	even := make([]float64, n/2)
+	odd := make([]float64, n/2)
 
-	for i := 0; i < n/2; i++ {
+	for i := 0; i < n/2; i+=2 {
 		even[i] = (*x)[2*i]
-		odd[i] = (*x)[2*i+1]
+		even[i+1] = (*x)[2*i+1]
+		odd[i] = (*x)[2*i+2]
+		odd[i+1] = (*x)[2*i+3]
 	}
 
 	fft(&even)
 	fft(&odd)
 
-	for k := 0; k < n/2; k++ {
-		t := cmplx.Exp(-2*math.Pi*complex(float64(k), 0)*complex(0, 1)/complex(float64(n), 0)) * odd[k]
-		(*x)[k] = even[k] + t
-		(*x)[k+n/2] = even[k] - t
+	for k := 0; k < n/2; k+=2 {
+		imag = -2 * math.Pi * float64(k) / float64(n)
+		real = math.Cos(imag)
+		imag = math.Sin(imag)
+
+		tReal = real * odd[k] - imag * odd[k+1]
+		tImag = real * odd[k+1] + imag * odd[k]
+
+		(*x)[k] = even[k] + tReal
+		(*x)[k+1] = even[k+1] + tImag
+
+		(*x)[k+n/2] = even[k] - tReal
+		(*x)[k+n/2+1] = even[k+1] - tImag
 	}
 }
 
 func fftLoop(size int64, loops int64) {
-	x := make([]complex128, size)
+	x := make([]float64, 2 * size)
 
 	for loop := int64(0); loop < loops; loop++ {
 		for i := range x {
-			x[i] = randComplex()
+			x[i] = rand.Float64()
 		}
 		fft(&x)
 	}
@@ -79,4 +87,5 @@ func main() {
 	}
 
 	wg.Wait()
+
 }

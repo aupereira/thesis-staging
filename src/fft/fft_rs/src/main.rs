@@ -1,45 +1,53 @@
-use num::complex::Complex;
 use rand::Rng;
 use std::env;
 use std::f64::consts::PI;
 use std::thread;
 
-fn rng_complex(rng: &mut rand::rngs::ThreadRng) -> Complex<f64> {
-    return num::complex::Complex::new(rng.gen_range(0.0..1.0), 0.0);
-}
-
-fn fft(x: &mut [Complex<f64>]) {
+fn fft(x: &mut [f64]) {
+    let (mut real, mut imag, mut t_real, mut t_imag): (f64, f64, f64, f64);
+    
     let n: usize = x.len();
 
-    if n <= 1 {
+    if n == 2 {
         return;
     }
 
-    let mut even: Vec<Complex<f64>> = Vec::new();
-    let mut odd: Vec<Complex<f64>> = Vec::new();
+    let mut even: Vec<f64> = vec![0.0; n / 2];
+    let mut odd: Vec<f64> = vec![0.0; n / 2];
 
-    for i in 0..n / 2 {
-        even.push(x[2 * i]);
-        odd.push(x[2 * i + 1]);
+    for i in (0..n / 2).step_by(2) {
+        even[i] = x[2 * i];
+        even[i + 1] = x[2 * i + 1];
+        odd[i] = x[2 * i + 2];
+        odd[i + 1] = x[2 * i + 3];
     }
 
     fft(&mut even);
     fft(&mut odd);
 
-    for k in 0..n / 2 {
-        let t = Complex::exp(-2.0 * PI * k as f64 / n as f64 * Complex::i()) * odd[k];
-        x[k] = even[k] + t;
-        x[k + n / 2] = even[k] - t;
+    for k in (0..n / 2).step_by(2) {
+        imag = -2.0 * PI * (k as f64) / (n as f64);
+        real = f64::cos(imag);
+        imag = f64::sin(imag);
+
+        t_real = real * odd[k] - imag * odd[k + 1];
+        t_imag = real * odd[k + 1] + imag * odd[k];
+
+        x[k] = even[k] + t_real;
+        x[k + 1] = even[k + 1] + t_imag;
+
+        x[k + n / 2] = even[k] - t_real;
+        x[k + n / 2 + 1] = even[k + 1] - t_imag;
     }
 }
 
 fn fft_loop(size: usize, loops: usize) {
     let mut rng = rand::thread_rng();
 
-    let mut x: Vec<Complex<f64>>;
+    let mut x: Vec<f64>;
 
-    for _i in 0..loops {
-        x = (0..size).map(|_| rng_complex(&mut rng)).collect();
+    for _ in 0..loops {
+        x = (0..2 * size).map(|_| rng.gen_range(0.0..1.0)).collect();
         fft(&mut x);
     }
 }

@@ -1,36 +1,48 @@
 class Main {
-  static void fft(Complex[] x) {
+  static void fft(double[] x) {
     int n = x.length;
 
-    if (n <= 1) {
+    double real, imag, tReal, tImag;
+
+    if (n == 2) {
       return;
     }
 
-    Complex[] even = new Complex[n / 2];
-    Complex[] odd = new Complex[n / 2];
+    double[] even = new double[n / 2];
+    double[] odd = new double[n / 2];
 
-    for (int i = 0; i < n / 2; i++) {
+    for (int i = 0; i < n / 2; i += 2) {
       even[i] = x[2 * i];
-      odd[i] = x[2 * i + 1];
+      even[i + 1] = x[2 * i + 1];
+      odd[i] = x[2 * i + 2];
+      odd[i + 1] = x[2 * i + 3];
     }
 
     fft(even);
     fft(odd);
 
-    for (int k = 0; k < n / 2; k++) {
-      Complex t =
-          Complex.exp(Complex.fromReal(-2.0 * Math.PI * k / n).mul(Complex.imag())).mul(odd[k]);
-      x[k] = even[k].add(t);
-      x[k + n / 2] = even[k].sub(t);
+    for (int k = 0; k < n / 2; k += 2) {
+      imag = -2 * Math.PI * k / n;
+      real = Math.cos(imag);
+      imag = Math.sin(imag);
+
+      tReal = real * odd[k] - imag * odd[k + 1];
+      tImag = real * odd[k + 1] + imag * odd[k];
+
+      x[k] = even[k] + tReal;
+      x[k + 1] = even[k + 1] + tImag;
+
+      x[k + n / 2] = even[k] - tReal;
+      x[k + n / 2 + 1] = even[k + 1] - tImag;
     }
   }
 
   public static void fftLoop(int size, int loops) {
-    Complex[] x = new Complex[size];
+    double[] x = new double[2 * size];
 
     for (int loop = 0; loop < loops; loop++) {
-      for (int i = 0; i < size; i++) {
-        x[i] = Complex.randComplex();
+      for (int i = 0; i < 2 * size; i++) {
+        x[i] = Math.random();
       }
       fft(x);
     }
