@@ -62,6 +62,8 @@ void S2OPAI(auto len, VectorDouble &v, MatrixDouble &A) {
 }
 
 void mMul(auto len, MatrixDouble &A, MatrixDouble &B, MatrixDouble &C, MatrixDouble &BTMP) {
+    double sum;
+    
     for (auto i = 0; i < len; i++) {
         for (auto j = 0; j < len; j++) {
             BTMP[i][j] = B[j][i];
@@ -70,10 +72,11 @@ void mMul(auto len, MatrixDouble &A, MatrixDouble &B, MatrixDouble &C, MatrixDou
 
     for (auto i = 0; i < len; i++) {
         for (auto j = 0; j < len; j++) {
-            C[i][j] = 0;
+            sum = 0;
             for (auto k = 0; k < len; k++) {
-                C[i][j] += A[i][k] * BTMP[j][k];
+                sum += A[i][k] * BTMP[j][k];
             }
+            C[i][j] = sum;
         }
     }
 }

@@ -98,6 +98,8 @@ func matMul(
 	C *[][]float64,
 	BTMP *[][]float64,
 ) {
+	var sum float64
+
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
 			(*BTMP)[i][j] = (*B)[j][i]
@@ -106,10 +108,11 @@ func matMul(
 
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
-			(*C)[i][j] = 0.0
+			sum = 0.0
 			for k := 0; k < n; k++ {
-				(*C)[i][j] += (*A)[i][k] * (*BTMP)[j][k]
+				sum += (*A)[i][k] * (*BTMP)[j][k]
 			}
+			(*C)[i][j] = sum
 		}
 	}
 }

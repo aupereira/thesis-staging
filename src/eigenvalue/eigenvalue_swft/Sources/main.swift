@@ -75,6 +75,8 @@ func matrixMultiply(
     _ C: inout [[Double]],
     _ BTMP: inout [[Double]]
 ) {
+    var sum: Double
+
     for i in 0..<len {
         for j in 0..<len {
             BTMP[i][j] = B[j][i]
@@ -83,10 +85,11 @@ func matrixMultiply(
     
     for i in 0..<len {
         for j in 0..<len {
-            C[i][j] = 0.0
+            sum = 0
             for k in 0..<len {
-                C[i][j] += A[i][k] * BTMP[j][k]
+                sum += A[i][k] * BTMP[j][k]
             }
+            C[i][j] = sum
         }
     }
 }

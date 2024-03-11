@@ -72,6 +72,8 @@ class Main {
     }
 
     static void matrixMul(int len, double[][] A, double[][] B, double[][] C, double[][] BTMP) {
+        double sum;
+        
         for (int i = 0; i < len; i++) {
             for (int j = 0; j < len; j++) {
                 BTMP[i][j] = B[j][i];
@@ -80,10 +82,11 @@ class Main {
 
         for (int i = 0; i < len; i++) {
             for (int j = 0; j < len; j++) {
-                C[i][j] = 0;
+                sum = 0;
                 for (int k = 0; k < len; k++) {
-                    C[i][j] += A[i][k] * BTMP[j][k];
+                    sum += A[i][k] * BTMP[j][k];
                 }
+                C[i][j] = sum;
             }
         }
     }

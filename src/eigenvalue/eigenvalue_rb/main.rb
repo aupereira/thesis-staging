@@ -55,10 +55,11 @@ def matrix_multiply(len, a, b, c, btmp)
 
     for i in 0...len
         for j in 0...len
-            c[i][j] = 0.0
+            sum = 0.0
             for k in 0...len
-                c[i][j] += a[i][k] * btmp[j][k]
+                sum += a[i][k] * btmp[j][k]
             end
+            c[i][j] = sum
         end
     end
 end

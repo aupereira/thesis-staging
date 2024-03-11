@@ -7,10 +7,10 @@ fn print_vec(v: &Vec<f64>) {
     println!("{:?}", v);
 }
 
-fn print_mat(A: &Vec<Vec<f64>>) {
+fn print_mat(a: &Vec<Vec<f64>>) {
     println!();
-    for i in 0..A.len() {
-        print_vec(&A[i]);
+    for i in 0..a.len() {
+        print_vec(&a[i]);
     }
 }
 
@@ -18,30 +18,33 @@ fn sgn(x: f64) -> f64 {
     return if x >= 0.0 {1.0} else {-1.0};
 }
 
-fn rand_symmetric(n: usize, rng: &mut rand::rngs::ThreadRng, A: &mut Vec<Vec<f64>>) {
-    // let mut rng = rand::thread_rng();
-
+fn rand_symmetric(n: usize, rng: &mut rand::rngs::ThreadRng, a: &mut Vec<Vec<f64>>) {
     for i in 0..n {
         for j in i+1..n {
-            A[i][j] = rng.gen();
-            A[j][i] = A[i][j];
+            a[i][j] = rng.gen();
+            a[j][i] = a[i][j];
         }
     }
 }
 
-fn matrix_multiply(n: usize, A: &Vec<Vec<f64>>, B: &Vec<Vec<f64>>, C: &mut Vec<Vec<f64>>, BTMP: &mut Vec<Vec<f64>>) {
+fn matrix_multiply(n: usize, a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, btmp: &mut Vec<Vec<f64>>) {
+    let mut sum: f64;
+
     for i in 0..n {
         for j in 0..n {
-            BTMP[i][j] = B[j][i];
+            unsafe {btmp[i][j] = *b.get_unchecked(j).get_unchecked(i);}
         }
     }
 
     for i in 0..n {
         for j in 0..n {
-            C[i][j] = 0.0;
+            sum = 0.0;
             for k in 0..n {
-                C[i][j] += A[i][k] * BTMP[j][k];
+                unsafe {sum += *a.get_unchecked(i).get_unchecked(k) * *btmp.get_unchecked(j).get_unchecked(k);}
+                // sum += a[i][k] * btmp[j][k];
             }
+            unsafe {*c.get_unchecked_mut(i).get_unchecked_mut(j) = sum;}
+            // c[i][j] = sum;
         }
     }
 }
@@ -56,15 +59,15 @@ fn norm2(n: usize, v: &Vec<f64>) -> f64 {
     return sum.sqrt();
 }
 
-fn S2OPAI(len: usize, v: &Vec<f64>, A: &mut Vec<Vec<f64>>) {
+fn s2opai(len: usize, v: &Vec<f64>, a: &mut Vec<Vec<f64>>) {
     for i in 0..len {
         for j in 0..len {
-            A[i][j] = -2.0 * v[i] * v[j];
+            a[i][j] = -2.0 * v[i] * v[j];
         }
     }
 
     for i in 0..len {
-        A[i][i] += 1.0;
+        a[i][i] += 1.0;
     }
 }
 
@@ -74,7 +77,7 @@ fn v_div_s(len: usize, v: &mut Vec<f64>, s: f64) {
     }
 }
 
-fn tridiagonalize(n: usize, A: &mut Vec<Vec<f64>>, P: &mut Vec<Vec<f64>>, TEMP: &mut Vec<Vec<f64>>, TPOSE: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
+fn tridiagonalize(n: usize, a: &mut Vec<Vec<f64>>, p: &mut Vec<Vec<f64>>, temp: &mut Vec<Vec<f64>>, tpose: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
     let mut alpha: f64;
     let mut r: f64;
 
@@ -83,7 +86,7 @@ fn tridiagonalize(n: usize, A: &mut Vec<Vec<f64>>, P: &mut Vec<Vec<f64>>, TEMP: 
             v[j] = 0.0;
         }
         for j in k+1..n {
-            v[j] = A[j][k];
+            v[j] = a[j][k];
         }
 
         alpha = -sgn(v[k + 1]) * norm2(n, &v);
@@ -94,23 +97,23 @@ fn tridiagonalize(n: usize, A: &mut Vec<Vec<f64>>, P: &mut Vec<Vec<f64>>, TEMP: 
             v[j] /= r;
         }
 
-        S2OPAI(n, &v, P);
-        matrix_multiply(n, P, A, TEMP, TPOSE);
-        matrix_multiply(n, TEMP, P, A, TPOSE);
+        s2opai(n, &v, p);
+        matrix_multiply(n, p, a, temp, tpose);
+        matrix_multiply(n, temp, p, a, tpose);
     }
 }
 
-fn householder(len: usize, A: &mut Vec<Vec<f64>>, A1: &mut Vec<Vec<f64>>, Q: &mut Vec<Vec<f64>>, H: &mut Vec<Vec<f64>>, TEMP: &mut Vec<Vec<f64>>, TPOSE: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
-    *A1 = A.clone();
+fn householder(len: usize, a: &mut Vec<Vec<f64>>, a1: &mut Vec<Vec<f64>>, q: &mut Vec<Vec<f64>>, h: &mut Vec<Vec<f64>>, temp: &mut Vec<Vec<f64>>, tpose: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
+    *a1 = a.clone();
     
-    let s: f64 = A1[len - 1][len - 1];
-    let t: f64 = A1[len - 2][len - 2];
-    let x: f64 = A1[len - 2][len - 1];
+    let s: f64 = a1[len - 1][len - 1];
+    let t: f64 = a1[len - 2][len - 2];
+    let x: f64 = a1[len - 2][len - 1];
     let d: f64 = (t - s) / 2.0;
     let shift: f64 = s - (x * x) / (d + sgn(d) * (d * d + x * x).sqrt());
 
     for i in 0..len {
-        A1[i][i] -= shift;
+        a1[i][i] -= shift;
     }
 
     for k in 0..len-1 {
@@ -118,76 +121,76 @@ fn householder(len: usize, A: &mut Vec<Vec<f64>>, A1: &mut Vec<Vec<f64>>, Q: &mu
             v[j] = 0.0;
         }
         for j in k..len {
-            v[j] = A1[j][k];
+            v[j] = a1[j][k];
         }
 
         v[k] += norm2(len, v) * sgn(v[k + 1]);
         v_div_s(len, v, norm2(len, v));
 
         if k == 0 {
-            S2OPAI(len, &v, Q);
-            matrix_multiply(len, Q, A1, TEMP, TPOSE);
-            mem::swap(A1, TEMP);
+            s2opai(len, &v, q);
+            matrix_multiply(len, q, a1, temp, tpose);
+            mem::swap(a1, temp);
         } else {
-            S2OPAI(len, &v, H);
-            matrix_multiply(len, H, A1,  TEMP, TPOSE);
-            mem::swap(A1, TEMP);
-            matrix_multiply(len, Q, H, TEMP, TPOSE);
-            mem::swap(Q, TEMP);
+            s2opai(len, &v, h);
+            matrix_multiply(len, h, a1,  temp, tpose);
+            mem::swap(a1, temp);
+            matrix_multiply(len, q, h, temp, tpose);
+            mem::swap(q, temp);
         }
     }
 
-    matrix_multiply(len, A1, Q, A, TPOSE);
+    matrix_multiply(len, a1, q, a, tpose);
 
     for i in 0..len {
-        A[i][i] += shift;
+        a[i][i] += shift;
     }
 }
 
-fn eig_QR(A: &mut Vec<Vec<f64>>, eig_vals: &mut Vec<f64>, T1: &mut Vec<Vec<f64>>, T2: &mut Vec<Vec<f64>>, T3: &mut Vec<Vec<f64>>, T4: &mut Vec<Vec<f64>>, T5: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
-    let mut ind: usize = A.len();
+fn eig_qr(a: &mut Vec<Vec<f64>>, eig_vals: &mut Vec<f64>, t1: &mut Vec<Vec<f64>>, t2: &mut Vec<Vec<f64>>, t3: &mut Vec<Vec<f64>>, t4: &mut Vec<Vec<f64>>, t5: &mut Vec<Vec<f64>>, v: &mut Vec<f64>) {
+    let mut ind: usize = a.len();
 
     let mut current_eigval: f64;
     let mut prev_eigval: f64 = std::f64::MAX;
 
     while ind > 1 {
-        householder(ind, A, T1, T2, T3, T4, T5, v);
+        householder(ind, a, t1, t2, t3, t4, t5, v);
 
-        current_eigval = A[ind - 1][ind - 1];
+        current_eigval = a[ind - 1][ind - 1];
 
         if (current_eigval - prev_eigval).abs() < 1e-5 {
             eig_vals[ind - 1] = current_eigval;
             
             ind -= 1;
 
-            prev_eigval = A[ind - 1][ind - 1];
+            prev_eigval = a[ind - 1][ind - 1];
         }
         else {
             prev_eigval = current_eigval;
         }
     }
 
-    eig_vals[0] = A[0][0];
+    eig_vals[0] = a[0][0];
 }
 
 fn eigen_loop(size: usize, loops: usize) {
     let mut rng = rand::thread_rng();
 
-    let mut A: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut a: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
  
-    let mut T1: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
-    let mut T2: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
-    let mut T3: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
-    let mut T4: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
-    let mut T5: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut t1: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut t2: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut t3: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut t4: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
+    let mut t5: Vec<Vec<f64>> = vec![vec![0.0; size]; size];
     let mut v: Vec<f64> = vec![0.0; size];
 
     let mut eig_vals: Vec<f64> = vec![0.0; size];
     
     for _ in 0..loops {
-        rand_symmetric(size, &mut rng, &mut A);
-        tridiagonalize(size, &mut A, &mut T1, &mut T2, &mut T3, &mut v);
-        eig_QR(&mut A, &mut eig_vals, &mut T1, &mut T2, &mut T3, &mut T4, &mut T5, &mut v);
+        rand_symmetric(size, &mut rng, &mut a);
+        tridiagonalize(size, &mut a, &mut t1, &mut t2, &mut t3, &mut v);
+        eig_qr(&mut a, &mut eig_vals, &mut t1, &mut t2, &mut t3, &mut t4, &mut t5, &mut v);
     }
 }
 
@@ -236,7 +239,7 @@ fn main() {
     // let mut eig_vals: Vec<f64> = vec![0.0; m_size];
     
     // tridiagonalize(m_size, &mut A, &mut T1, &mut T2, &mut T3, &mut v);
-    // eig_QR(&mut A, &mut eig_vals, &mut T1, &mut T2, &mut T3, &mut T4, &mut T5, &mut v);
+    // eig_qr(&mut A, &mut eig_vals, &mut T1, &mut T2, &mut T3, &mut T4, &mut T5, &mut v);
 
     // print_vec(&eig_vals);
 }

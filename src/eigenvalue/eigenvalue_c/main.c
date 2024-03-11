@@ -87,6 +87,8 @@ void S2OPAI(size_t N, size_t len, double v[N], double A[N][N]) {
 }
 
 void mMul(size_t N, size_t len, double A[N][N], double B[N][N], double C[N][N], double BTMP[N][N]) {
+    double sum;
+    
     for (size_t i = 0; i < len; i++) {
         for (size_t j = 0; j < len; j++) {
             BTMP[i][j] = B[j][i];
@@ -95,10 +97,11 @@ void mMul(size_t N, size_t len, double A[N][N], double B[N][N], double C[N][N], 
     
     for (size_t i = 0; i < len; i++) {
         for (size_t j = 0; j < len; j++) {
-            C[i][j] = 0.0;
+            sum = 0.0;
             for (size_t k = 0; k < len; k++) {
-                C[i][j] += A[i][k] * BTMP[j][k];
+                sum += A[i][k] * BTMP[j][k];
             }
+            C[i][j] = sum;
         }
     }
 }
